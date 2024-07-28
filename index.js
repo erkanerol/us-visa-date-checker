@@ -23,10 +23,17 @@ async function main(currentBookedDate) {
   }  
 
   helper.log(`Initializing with current date ${currentBookedDate}`)
-  while(true) {
 
+  let sessionHeaders = await booker.login()
+  let counter = 0
+  while(true) {
     try {
-      const sessionHeaders = await booker.login()
+      counter++
+      console.log(`Checking for available dates... (${counter})`)
+      if (counter % 5 == 0) {
+        sessionHeaders = await booker.login()
+      }
+      
       const date = await booker.checkAvailableDate(sessionHeaders)
 
       if (!date) {
@@ -46,17 +53,12 @@ async function main(currentBookedDate) {
           helper.log(`Rechecked the closest date and found: ${recheck}`, true)
           if(recheck <= date){
               
-              if (isNotifEnabled)
-                email.sendMail(transporter,
-                  "Closer Date Found for US Visa Appointment",
-                  `${date}`)
-              
               const time = await booker.checkAvailableTime(sessionHeaders, date)
               booker.book(sessionHeaders, date, time)
                 .then(res => helper.log(res))
                 .then(d => helper.log(`Booked time at ${date} ${time}`), true)
-                .then(d => email.sendMail(transporter, "Booked a New Appointment Date", `${date}:${time}`))
               
+
               // We should ideally update the latestBookedDate at this point.
               // However, the booking request returns "success" even if it
               // cannot book the date. So maybe don't trust book() and don't
@@ -64,7 +66,8 @@ async function main(currentBookedDate) {
               // You might want to CURRENT_APPOINTMENT_DATE in .env and restart,
               // if booking was successful.
 
-              //latestBookedDate = date
+              console.log(`Updating latest booked date to ${date}`)
+              latestBookedDate = date
           }
         }
       }
@@ -73,7 +76,7 @@ async function main(currentBookedDate) {
       helper.log("Trying again...")
     }
     
-    await helper.sleep(60)
+    await helper.sleep()
   } 
 }
 
