@@ -48,7 +48,7 @@ function parseCookies(cookies) {
 }
   
 export function sleep(s) {
-    s = 300 + Math.floor(Math.random() * 100)
+    s = 30 + Math.floor(Math.random() * 10)
     console.log(`Sleeping ${s} seconds...`)
     s = s * 1000
     return new Promise((resolve) => {
