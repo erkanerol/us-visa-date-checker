@@ -44,31 +44,20 @@ async function main(currentBookedDate) {
         helper.log(`Closer date found: ${date}`, true)
         
         if(date < latestBookedDate){
-          // Recheck to avoid notifying unnecessarily
-          //
-          // Rechecking here might be unnecessary depending on the situation. The
-          // bot often cannot book the date even if it consider the date as
-          // available. To reduce the notification noise, double-chech the date.
-          var recheck = await booker.checkAvailableDate(sessionHeaders)
-          helper.log(`Rechecked the closest date and found: ${recheck}`, true)
-          if(recheck <= date){
-              
-              const time = await booker.checkAvailableTime(sessionHeaders, date)
-              booker.book(sessionHeaders, date, time)
-                .then(res => helper.log(res))
-                .then(d => helper.log(`Booked time at ${date} ${time}`), true)
-              
+          const time = await booker.checkAvailableTime(sessionHeaders, date)
+          booker.book(sessionHeaders, date, time)
+            .then(res => helper.log(res))
+            .then(d => helper.log(`Booked time at ${date} ${time}`), true)
+          
+          // We should ideally update the latestBookedDate at this point.
+          // However, the booking request returns "success" even if it
+          // cannot book the date. So maybe don't trust book() and don't
+          // update latestBookedDate to be safe.
+          // You might want to CURRENT_APPOINTMENT_DATE in .env and restart,
+          // if booking was successful.
 
-              // We should ideally update the latestBookedDate at this point.
-              // However, the booking request returns "success" even if it
-              // cannot book the date. So maybe don't trust book() and don't
-              // update latestBookedDate to be safe.
-              // You might want to CURRENT_APPOINTMENT_DATE in .env and restart,
-              // if booking was successful.
-
-              console.log(`Updating latest booked date to ${date}`)
-              latestBookedDate = date
-          }
+          console.log(`Updating latest booked date to ${date}`)
+          latestBookedDate = date
         }
       }
     } catch(err) {
