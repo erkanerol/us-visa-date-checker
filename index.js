@@ -38,27 +38,17 @@ async function main(currentBookedDate) {
 
       if (!date) {
         helper.log('No available date')
-      } else if (date > currentBookedDate) {
-        helper.log(`Closest available date is further than the already booked date (${currentBookedDate} vs ${date})`)
-      } else {
-        helper.log(`Closer date found: ${date}`, true)
-        
-        if(date < latestBookedDate){
-          const time = await booker.checkAvailableTime(sessionHeaders, date)
+      } else if (date < currentBookedDate) {
+        const time = await booker.checkAvailableTime(sessionHeaders, date)
+        if (time !== undefined){
           booker.book(sessionHeaders, date, time)
-            .then(res => helper.log(res))
-            .then(d => helper.log(`Booked time at ${date} ${time}`), true)
-          
-          // We should ideally update the latestBookedDate at this point.
-          // However, the booking request returns "success" even if it
-          // cannot book the date. So maybe don't trust book() and don't
-          // update latestBookedDate to be safe.
-          // You might want to CURRENT_APPOINTMENT_DATE in .env and restart,
-          // if booking was successful.
-
-          console.log(`Updating latest booked date to ${date}`)
-          latestBookedDate = date
+          .then(res => helper.log(res))
+          .then(d => helper.log(`Booked time at ${date} ${time}`), true)
+        }else {
+          console.log(`No time found in ${data}`)
         }
+      } else {     
+        helper.log(`Closest available date is further than the already booked date (${currentBookedDate} vs ${date})`)
       }
     } catch(err) {
       console.error(err)
